@@ -29,6 +29,9 @@ module MetaRequest
       end
     end
 
+    def self.config; @config ||= {NOT_JSON_ENCODABLE: []}.with_indifferent_access end
+    def self.configure; yield( config ) end
+
     private
 
     def json_encodable(payload)
@@ -39,8 +42,12 @@ module MetaRequest
         end
 
         begin
-          value.to_json(:methods => [:duration])
-          new_value = value
+          if MetaRequest::Event.config[:NOT_JSON_ENCODABLE].any?{|klass| value.is_a?(klass) }
+            new_value = 'Not JSON Encodable'
+          else
+            value.to_json(:methods => [:duration])
+            new_value = value
+          end
         rescue
           new_value = 'Not JSON Encodable'
         end
